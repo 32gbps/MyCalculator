@@ -1,4 +1,4 @@
-package com.example.myacalculator
+package com.example.mycalculator
 
 import android.os.Bundle
 import androidx.activity.ComponentActivity
@@ -8,8 +8,10 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.aspectRatio
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
@@ -26,7 +28,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
-public enum class Operations(val sign: String){
+enum class Operations(val sign: String){
     NONE(""),
     ADDITION("+"),
     SUBSTRACTION("-"),
@@ -39,7 +41,7 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContent {
-            Calculator();
+            Calculator()
         }
     }
 }
@@ -49,61 +51,64 @@ class MainActivity : ComponentActivity() {
 fun Calculator() {
     val lOperand = remember{mutableStateOf("0")}
     val rOperand = remember{mutableStateOf("")}
-    //ну или оператор...
+
     val operation = remember{mutableStateOf(Operations.NONE)}
 
-    //Запоминаем последнее действие. При повторном нажатии "=" операция повторяется
+    /*
+    Здесь запоминается последняя операция,
+    значение правого операнда и вид оператора.
+    При повторном нажатии "=" операция повторяется
+      */
     val rOperand_last = remember{mutableStateOf("")}
     val operation_last = remember{mutableStateOf(Operations.NONE)}
 
     val setLOperand = {
             value: String ->
         if(lOperand.value == "0")
-            lOperand.value = value;
+            lOperand.value = value
         else
-            lOperand.value += value;
+            lOperand.value += value
     }
     val setROperand = {
             value: String ->
         if(rOperand.value == "0")
-            rOperand.value = value;
+            rOperand.value = value
         else
-            rOperand.value += value;
+            rOperand.value += value
     }
     val setLPeriod = {
         if(lOperand.value == "0" || lOperand.value.isEmpty())
-            lOperand.value = "0.";
+            lOperand.value = "0."
         else if(!lOperand.value.contains('.'))
-            lOperand.value += ".";
+            lOperand.value += "."
     }
     val setRPeriod = {
         if(rOperand.value == "0" || rOperand.value.isEmpty())
-            rOperand.value = "0.";
+            rOperand.value = "0."
         else if(!rOperand.value.contains('.'))
-            rOperand.value += ".";
+            rOperand.value += "."
     }
     val setPeriodSign = {
         if(operation.value == Operations.NONE)
-            setLPeriod();
+            setLPeriod()
         else
-            setRPeriod();
+            setRPeriod()
     }
     val setValue = {
             value: String ->
         if(operation.value == Operations.NONE)
-            setLOperand(value);
+            setLOperand(value)
         else
-            setROperand(value);
+            setROperand(value)
     }
-    val setOperator = { op:Operations -> operation.value = op}
 
     val setDefaultState = {
-        lOperand.value = "0";
-        rOperand.value = "";
-        operation.value = Operations.NONE;
+        lOperand.value = "0"
+        rOperand.value = ""
+        operation.value = Operations.NONE
 
-        rOperand_last.value = "";
-        operation_last.value = Operations.NONE;
+        rOperand_last.value = ""
+        operation_last.value = Operations.NONE
     }
 
     val erase = { input:Int ->
@@ -111,39 +116,38 @@ fun Calculator() {
             if (operation.value == Operations.NONE)
                 lOperand.value = "0"
             else
-                rOperand.value = "0";
+                rOperand.value = "0"
         }
         else if(input == 0)
-            setDefaultState();
+            setDefaultState()
         else
         {
             if(!rOperand.value.isEmpty())
-                rOperand.value = rOperand.value.dropLast(1);
+                rOperand.value = rOperand.value.dropLast(input)
             else if(rOperand.value.isEmpty() && operation.value != Operations.NONE)
-                operation.value = Operations.NONE;
+                operation.value = Operations.NONE
             else if(lOperand.value.length > 1 && lOperand.value != "0")
-                lOperand.value = lOperand.value.dropLast(1);
+                lOperand.value = lOperand.value.dropLast(input)
             else
-                lOperand.value = "0";
+                lOperand.value = "0"
         }
-    };
+    }
     val subCalculate: (Double,Double,Operations) -> String = {
             left:Double, right:Double, op:Operations ->
-        var result = 0.0;
-        var answer = "";
+        var result = 0.0
         when(op){
-            Operations.ADDITION -> result = left + right;
-            Operations.SUBSTRACTION -> result = left - right;
-            Operations.MULTIPLY -> result = left * right;
-            Operations.DIVISION -> result = left / right;
-            Operations.PERCENTAGE -> result = left * (right/100);
+            Operations.ADDITION -> result = left + right
+            Operations.SUBSTRACTION -> result = left - right
+            Operations.MULTIPLY -> result = left * right
+            Operations.DIVISION -> result = left / right
+            Operations.PERCENTAGE -> result = left * (right/100)
             else -> {}
         }
 
-        answer = result.toString().dropLastWhile { x->x =='0' }
+        var answer = result.toString().dropLastWhile { x->x =='0' }
         if(answer.endsWith('.'))
         {
-            answer = answer.dropLast(1);
+            answer = answer.dropLast(1)
         }
         answer
     }
@@ -152,19 +156,25 @@ fun Calculator() {
         {
             lOperand.value = subCalculate(lOperand.value.toDouble(),
                 rOperand.value.toDouble(),
-                operation.value);
-            operation_last.value = operation.value;
-            operation.value = Operations.NONE;
-            rOperand_last.value = rOperand.value;
-            rOperand.value = "";
+                operation.value)
+            operation_last.value = operation.value
+            operation.value = Operations.NONE
+            rOperand_last.value = rOperand.value
+            rOperand.value = ""
         }
         else if(!rOperand_last.value.isEmpty() && operation_last.value != Operations.NONE)
             lOperand.value = subCalculate(lOperand.value.toDouble(),
                 rOperand_last.value.toDouble(),
-                operation_last.value);
+                operation_last.value)
     }
 
-    Column(Modifier.background(Color.Black).wrapContentSize(align = Alignment.TopCenter)) {
+    val setOperator = { op:Operations ->
+        if(operation.value != Operations.NONE)
+            calculate()
+         operation.value = op}
+
+
+    Column(Modifier.background(Color.Black).fillMaxHeight().wrapContentHeight(Alignment.Bottom)) {
         val md = Modifier.wrapContentSize()
         val modifier = Modifier
             .fillMaxWidth()
@@ -180,51 +190,51 @@ fun Calculator() {
 
         }
         Row(md) {
-            Test({ erase(-1)}, "CE", modifier)
-            Test({ erase(0) }, "C", modifier)
-            Test({ erase(1) }, "<x", modifier)
-            Test({ setOperator(Operations.DIVISION)}, "/", modifier)
+            Btn({ erase(-1)}, "CE", modifier)
+            Btn({ erase(0) }, "C", modifier)
+            Btn({ erase(1) }, "<x", modifier)
+            Btn({ setOperator(Operations.DIVISION)}, "/", modifier)
         }
         Row(md) {
-            Test({ setValue("7") }, "7", modifier)
-            Test({ setValue("8") }, "8", modifier)
-            Test({ setValue("9") }, "9", modifier)
-            Test({ setOperator(Operations.MULTIPLY)}, "*", modifier)
+            Btn({ setValue("7") }, "7", modifier)
+            Btn({ setValue("8") }, "8", modifier)
+            Btn({ setValue("9") }, "9", modifier)
+            Btn({ setOperator(Operations.MULTIPLY)}, "*", modifier)
         }
         Row(md) {
-            Test({ setValue("4") }, "4", modifier)
-            Test({ setValue("5") }, "5", modifier)
-            Test({ setValue("6") }, "6", modifier)
-            Test({ setOperator(Operations.SUBSTRACTION) }, "-", modifier)
+            Btn({ setValue("4") }, "4", modifier)
+            Btn({ setValue("5") }, "5", modifier)
+            Btn({ setValue("6") }, "6", modifier)
+            Btn({ setOperator(Operations.SUBSTRACTION) }, "-", modifier)
         }
         Row(md) {
-            Test({ setValue("1") }, "1", modifier)
-            Test({ setValue("2") }, "2", modifier)
-            Test({ setValue("3") }, "3", modifier)
-            Test({ setOperator(Operations.ADDITION)}, "+", modifier)
+            Btn({ setValue("1") }, "1", modifier)
+            Btn({ setValue("2") }, "2", modifier)
+            Btn({ setValue("3") }, "3", modifier)
+            Btn({ setOperator(Operations.ADDITION)}, "+", modifier)
         }
         Row(md) {
-            Test({ setOperator(Operations.PERCENTAGE) }, "%", modifier)
-            Test({ setValue("0")}, "0", modifier)
-            Test({ setPeriodSign() }, ".", modifier)
-            Test({ calculate() }, "=", modifier)
+            Btn({ setOperator(Operations.PERCENTAGE) }, "%", modifier)
+            Btn({ setValue("0")}, "0", modifier)
+            Btn({ setPeriodSign() }, ".", modifier)
+            Btn({ calculate() }, "=", modifier)
         }
     }
 }
 @Composable
-fun Test(onClick: ()-> Unit, label:String, modifier: Modifier = Modifier){
+fun Btn(onClick: ()-> Unit, label:String, modifier: Modifier = Modifier){
     val btnClrs = ButtonColors(Color.DarkGray, Color.LightGray, Color.LightGray, Color.DarkGray)
     Button(
         onClick = onClick,
         colors = btnClrs,
         modifier = modifier,
-        shape = RoundedCornerShape(16.dp),
+        shape = RoundedCornerShape(26.dp),
         content = { BText(label)})
 }
 @Composable
 private fun BText(text:String){
     Text(text,
         textAlign = TextAlign.Center,
-        fontSize = 32.sp)
+        fontSize = 36.sp)
 }
 
